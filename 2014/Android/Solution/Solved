@@ -1,0 +1,48 @@
+Pwn2Win Challenge September 2014 Writeup
+Here is a short breakdown on the September Pwn2Win Challenge.
+
+The first step was to download the app from the google play store here
+
+When you open the app, you see a big button that says "Push the button XOR die", when you push it you see the following ecrypted string:
+
+d208128bf26a691375c6301863a48e6aa69eb32849889ee717b48663adaae5b3e0594d9597581e1ffc34681cff3ecfc271edace315d5513f85c0fe922ec10d5e387b0c7d9477439302c298a5
+
+We weren't sure what to do with that string so we moved on.
+
+On the play store page, there is a link to the developer website which is the first clue, which ultimately gave us this morse code string:
+
+Well, that was easy if you were at SecKC... otherwise you are remote and needed this file. I shouldn't just hand over this part of the challenge... but, because I am a Good guy... .... - - .--. ... ---... -..-. -..-. ... . -.-. -.- -.-. .-.-.- --- .-. --. -..-. -.-. .... .- .-.. .-.. . -. --. . ... -..-. .- -. -.. .-. --- .. -.. -..-. ... - .-. . .- -- .-.-.- .--- .--. . --. <-....- -....- - .... .. ... ... .... --- ..- .-.. -.. -... . .- .-.. .-.. .-.. --- .-- . .-. -.-. .- ... .
+
+If you run that through a morse code translator, you get the following:
+
+HTTPS://SECKC.ORG/CHALLENGES/ANDROID/STREAM.JPEG – THIS SHOULD BE ALL LOWER CASE
+
+If you go to the link, you get this image, named stream.jpeg
+
+The next step is to run that image through steghide It prompts for a password, leave it blank
+
+steghide extract -sf stream.jpeg
+
+This gives us the following output, but most importantly we get two encrypted strings
+
+The first string has a clue that it is the location of the cipher image "aHR0cHM6Ly9zZWNrYy5vcmcvY2hhbGxlbmdlcy9DMDgxMy9jaXBoZXIucG5n" which is base64 encoded and decodes to:
+
+https://seckc.org/challenges/C0813/cipher.png
+
+The next string is "uggcf://frpxp.bet/punyyratrf/naqebvq/pnxr.wcrt" was encoded with ROT13 and decodes to:
+
+https://seckc.org/challenges/android/cake.jpeg
+
+so now we have three images, stream.jpeg and cipher.png looked very suspicous to us. We could tell there was data encoded in them but we were unsure how to extract it. I tried using imagemagick to programatically combine the two images with a xor algorithm, but no luck. Eventually, I threw both images into photoshop, added a transparent layer to the cipher.png and lined them perfectly to make the following image. Giving us the following key:
+
+e864228798ca169087ba45f1671ac2be
+
+Next, you need to use steghide on cake.jpeg and use the key we just received from overlapping the stream and cipher images to receive the following clue:
+
+The Secret to decrypt the XOR is: SecKCake
+
+The final step is to take the long encrypted string we received from the app and xor it with the key "SecKCake" to get the following
+
+Key 1 - fd09c583112c385fa7625178adb2038959d73960cf4d853a31cdb7f0f312f0a2
+
+We emailed the above key to Cory and that was it, we won!
